@@ -12,7 +12,7 @@ Pydantic v2, uv, Ruff, pytest, Docker Compose, GitHub Actions.
 ## Быстрый старт
 
 ```bash
-docker compose up --build
+make up        # то же, что docker compose up --build
 ```
 
 - Swagger UI: http://localhost:8000/docs
@@ -20,7 +20,9 @@ docker compose up --build
 - OpenAPI-схема: http://localhost:8000/openapi.json
 
 Миграции применяются автоматически при старте контейнера. Если порты `8000` или `5432`
-заняты, задайте другие: `API_PORT=8080 POSTGRES_PORT=5433 docker compose up --build`.
+заняты, задайте другие: `API_PORT=8080 POSTGRES_PORT=5433 make up`.
+
+Список всех команд выводит `make`, см. раздел [«Команды: Rails и наш проект»](#команды-rails-и-наш-проект).
 
 ## API
 
@@ -32,8 +34,8 @@ docker compose up --build
 | POST  | `/orders/{id}/pay` | Оплатить заказ: товар становится `SOLD` | 200, 404, 409, 422 |
 | GET   | `/health`          | Проверка работоспособности              | 200                |
 
-`409 Conflict` означает, что товар уже зарезервирован или продан (или заказ уже оплачен). Ошибки имеют единый формат
-`{"detail": "..."}`.
+`409 Conflict` означает, что товар уже зарезервирован или продан (или заказ уже оплачен).
+Ошибки имеют единый формат `{"detail": "..."}`.
 
 ```bash
 curl -X POST localhost:8000/products -H 'Content-Type: application/json' \
@@ -54,16 +56,21 @@ curl -X POST localhost:8000/orders -H 'Content-Type: application/json' \
    `test_committed_openapi_schema_is_up_to_date` не даёт файлу устареть. После изменения API:
 
    ```bash
-   uv run python -m scripts.export_openapi
+   make openapi
    ```
 
 3. **Типизированный TypeScript-клиент:** у каждого эндпоинта стабильный `operationId`
    (`products-create_product`, `orders-pay_order`), поэтому имена функций в клиенте понятные:
 
    ```bash
-   npx @hey-api/openapi-ts -i ../market_fastapi/openapi.json -o src/client
+   npm i -D @hey-api/openapi-ts typescript@5
+   npx openapi-ts -i ../market_fastapi/openapi.json -o src/client
    # или из запущенного сервера: -i http://localhost:8000/openapi.json
    ```
+
+   Получаются функции `productsCreateProduct`, `ordersPayOrder` и типы вроде
+   `ProductStatus = 'AVAILABLE' | 'RESERVED' | 'SOLD'`. Нужен TypeScript 5: с TypeScript 7
+   генератор пока не работает.
 
 4. **CORS:** разрешённые origin'ы задаются в `BACKEND_CORS_ORIGINS`. По умолчанию в Docker это
    `http://localhost:5173` (Vite) и `http://localhost:3000` (Next.js).
@@ -145,33 +152,66 @@ RETURNING *;
 
 ## Локальная разработка
 
-Нужен [uv](https://docs.astral.sh/uv/).
+Нужны [uv](https://docs.astral.sh/uv/) (менеджер пакетов Python), Docker и `make`.
 
 ```bash
-uv sync                                  # зависимости
-cp .env.example .env                     # настройки
-docker compose up -d db                  # только PostgreSQL
-uv run alembic upgrade head              # миграции
-uv run fastapi dev app/main.py           # сервер с автоперезагрузкой
+make setup     # зависимости + .env из .env.example
+make db        # PostgreSQL в Docker
+make migrate   # миграции
+make dev       # сервер с автоперезагрузкой на http://localhost:8000
 ```
 
 Тесты используют отдельную базу `app_test` (она создаётся при первом запуске контейнера
 PostgreSQL) и не трогают данные разработки:
 
 ```bash
-uv run pytest --cov                      # тесты + отчёт о покрытии (порог 95%)
-uv run ruff check . && uv run ruff format --check .
-```
-
-Новая миграция после изменения моделей:
-
-```bash
-uv run alembic revision --autogenerate -m "describe change"
+make test      # тесты + отчёт о покрытии (порог 95%)
+make lint      # проверка стиля
 ```
 
 CI (GitHub Actions) на каждый push и pull request запускает линтер, проверяет, что миграции
 применяются и соответствуют моделям (`alembic check`), прогоняет тесты на PostgreSQL с
 проверкой покрытия и собирает Docker-образ.
+
+## Команды: Rails и наш проект
+
+Короткие команды описаны в [`Makefile`](Makefile). Под ними стоят обычные вызовы `uv run …`,
+которые можно запускать и напрямую.
+
+| Задача                      | Rails                             | Здесь                           |
+|-----------------------------|-----------------------------------|---------------------------------|
+| Список команд               | `bin/rails --help`                | `make`                          |
+| Установить зависимости      | `bundle install`                  | `make setup`                    |
+| Добавить библиотеку         | `bundle add <gem>`                | `uv add <package>`              |
+| Запустить сервер            | `bin/rails server`                | `make dev`                      |
+| Запустить всё в Docker      | `docker compose up`               | `make up`                       |
+| Применить миграции          | `bin/rails db:migrate`            | `make migrate`                  |
+| Создать миграцию            | `bin/rails g migration AddField`  | `make migration m="add field"`  |
+| Откатить миграцию           | `bin/rails db:rollback`           | `make rollback`                 |
+| Запустить тесты             | `bin/rails test`                  | `make test`                     |
+| Проверить стиль             | `bin/rubocop`                     | `make lint`                     |
+| Исправить стиль             | `bin/rubocop -a`                  | `make format`                   |
+| Посмотреть маршруты         | `bin/rails routes`                | Swagger: `/docs`                |
+
+Где что лежит:
+
+| Rails                                   | Здесь                        | Что это                                |
+|-----------------------------------------|------------------------------|----------------------------------------|
+| `Gemfile`                               | `pyproject.toml`             | зависимости, правится руками           |
+| `Gemfile.lock`                          | `uv.lock`                    | точные версии, генерируется, не читаем |
+| `config/database.yml`, credentials      | `.env`, `app/core/config.py` | настройки                              |
+| `config/routes.rb` + controllers        | `app/api/routes/`            | HTTP-слой                              |
+| strong parameters, serializers          | `app/schemas.py`             | валидация входа и формат ответа        |
+| `app/models/` (ActiveRecord)            | `app/models.py`              | таблицы                                |
+| scopes и запросы в моделях              | `app/repositories/`          | запросы к БД                           |
+| service objects (`app/services/`)       | `app/services/`              | бизнес-логика                          |
+| `rescue_from` в `ApplicationController` | `app/api/errors.py`          | ошибки → HTTP-коды                     |
+| `db/migrate/`                           | `alembic/versions/`          | миграции                               |
+| `test/`, `spec/`                        | `tests/`                     | тесты                                  |
+
+Главное отличие от Rails: SQLAlchemy — не ActiveRecord. Модель описывает только таблицу, а
+запросы вынесены в репозитории. Поэтому слои, которые в Rails часто смешаны в модели, здесь
+разделены явно, как и требует задание.
 
 ## Что дальше
 
