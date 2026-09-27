@@ -6,10 +6,14 @@ from app.api.errors import register_exception_handlers
 from app.api.main import api_router
 from app.core.config import settings
 
-DESCRIPTION = """
-Reservation and purchase API for a resale marketplace.
-Each product exists in a single copy: `AVAILABLE` → `RESERVED` → `SOLD`.
-"""
+DESCRIPTION = """Reservation and purchase API for a resale marketplace.
+Each product exists in a single copy: `AVAILABLE` → `RESERVED` → `SOLD`."""
+
+OPENAPI_TAGS = [
+    {"name": "products", "description": "Create and read products."},
+    {"name": "orders", "description": "Reserve a product with an order and pay for it."},
+    {"name": "health", "description": "Service health check."},
+]
 
 
 def generate_operation_id(route: APIRoute) -> str:
@@ -21,6 +25,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description=DESCRIPTION,
     version="0.1.0",
+    openapi_tags=OPENAPI_TAGS,
     generate_unique_id_function=generate_operation_id,
 )
 

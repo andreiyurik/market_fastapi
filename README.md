@@ -47,15 +47,26 @@ curl -X POST localhost:8000/orders -H 'Content-Type: application/json' \
 
 ## Интеграция с фронтендом (React)
 
-Разрешённые origin'ы для CORS задаются в `BACKEND_CORS_ORIGINS`. По умолчанию в Docker это
-`http://localhost:5173` (Vite) и `http://localhost:3000` (Next.js).
+1. **Документация и ручная проверка:** Swagger UI на http://localhost:8000/docs, где любой
+   эндпоинт можно вызвать кнопкой «Try it out».
+2. **Контракт API:** файл [`openapi.json`](openapi.json) лежит в репозитории, поэтому клиент можно
+   сгенерировать без запуска бэкенда, а любое изменение API видно в диффе PR. Тест
+   `test_committed_openapi_schema_is_up_to_date` не даёт файлу устареть. После изменения API:
 
-У каждого эндпоинта стабильный `operationId` (`products-create_product`,
-`orders-create_order`), поэтому типизированный TypeScript-клиент генерируется из схемы:
+   ```bash
+   uv run python -m scripts.export_openapi
+   ```
 
-```bash
-npx @hey-api/openapi-ts -i http://localhost:8000/openapi.json -o src/client
-```
+3. **Типизированный TypeScript-клиент:** у каждого эндпоинта стабильный `operationId`
+   (`products-create_product`, `orders-pay_order`), поэтому имена функций в клиенте понятные:
+
+   ```bash
+   npx @hey-api/openapi-ts -i ../market_fastapi/openapi.json -o src/client
+   # или из запущенного сервера: -i http://localhost:8000/openapi.json
+   ```
+
+4. **CORS:** разрешённые origin'ы задаются в `BACKEND_CORS_ORIGINS`. По умолчанию в Docker это
+   `http://localhost:5173` (Vite) и `http://localhost:3000` (Next.js).
 
 ## Архитектура
 
@@ -94,6 +105,8 @@ app/
     └── routes/          # products.py, orders.py
 alembic/                 # миграции БД
 tests/                   # интеграционные тесты на реальном PostgreSQL
+scripts/                 # экспорт OpenAPI, SQL-инициализация БД
+openapi.json             # контракт API для фронтенда
 ```
 
 ## Как решена конкурентность
