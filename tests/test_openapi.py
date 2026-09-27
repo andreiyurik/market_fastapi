@@ -14,6 +14,7 @@ async def test_openapi_exposes_stable_operation_ids(client: AsyncClient) -> None
     }
     assert {
         "products-create_product",
+        "products-list_products",
         "products-get_product",
         "orders-create_order",
         "orders-pay_order",

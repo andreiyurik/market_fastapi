@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.api.deps import ProductServiceDep
 from app.schemas import ErrorResponse, ProductCreate, ProductRead
@@ -13,6 +14,17 @@ async def create_product(data: ProductCreate, service: ProductServiceDep) -> Pro
     """Create a product. New products are always `AVAILABLE`."""
     product = await service.create(data)
     return ProductRead.model_validate(product)
+
+
+@router.get("")
+async def list_products(
+    service: ProductServiceDep,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[ProductRead]:
+    """List products, newest first."""
+    products = await service.list(limit=limit, offset=offset)
+    return [ProductRead.model_validate(product) for product in products]
 
 
 @router.get(
