@@ -26,14 +26,14 @@ make up        # то же, что docker compose up --build
 
 ## API
 
-| Метод | Путь               | Описание                                | Ответы             |
-|-------|--------------------|-----------------------------------------|--------------------|
-| POST  | `/products`        | Создать товар (статус `AVAILABLE`)      | 201, 422           |
-| GET   | `/products`        | Список товаров, новые первыми (`limit`, `offset`) | 200, 422 |
-| GET   | `/products/{id}`   | Получить товар                          | 200, 404, 422      |
-| POST  | `/orders`          | Создать заказ и зарезервировать товар   | 201, 404, 409, 422 |
-| POST  | `/orders/{id}/pay` | Оплатить заказ: товар становится `SOLD` | 200, 404, 409, 422 |
-| GET   | `/health`          | Проверка работоспособности              | 200                |
+| Метод | Путь               | Описание                                          | Ответы             |
+|-------|--------------------|---------------------------------------------------|--------------------|
+| POST  | `/products`        | Создать товар (статус `AVAILABLE`)                | 201, 422           |
+| GET   | `/products`        | Список товаров, новые первыми (`limit`, `offset`) | 200, 422           |
+| GET   | `/products/{id}`   | Получить товар                                    | 200, 404, 422      |
+| POST  | `/orders`          | Создать заказ и зарезервировать товар             | 201, 404, 409, 422 |
+| POST  | `/orders/{id}/pay` | Оплатить заказ: товар становится `SOLD`           | 200, 404, 409, 422 |
+| GET   | `/health`          | Проверка работоспособности                        | 200                |
 
 `409 Conflict` означает, что товар уже зарезервирован или продан (или заказ уже оплачен).
 Ошибки имеют единый формат `{"detail": "..."}`.
@@ -159,6 +159,7 @@ RETURNING *;
 make setup     # зависимости + .env из .env.example
 make db        # PostgreSQL в Docker
 make migrate   # миграции
+make seed      # демо-товары (очищает текущие данные)
 make dev       # сервер с автоперезагрузкой на http://localhost:8000
 ```
 
@@ -179,20 +180,21 @@ CI (GitHub Actions) на каждый push и pull request запускает л
 Короткие команды описаны в [`Makefile`](Makefile). Под ними стоят обычные вызовы `uv run …`,
 которые можно запускать и напрямую.
 
-| Задача                      | Rails                             | Здесь                           |
-|-----------------------------|-----------------------------------|---------------------------------|
-| Список команд               | `bin/rails --help`                | `make`                          |
-| Установить зависимости      | `bundle install`                  | `make setup`                    |
-| Добавить библиотеку         | `bundle add <gem>`                | `uv add <package>`              |
-| Запустить сервер            | `bin/rails server`                | `make dev`                      |
-| Запустить всё в Docker      | `docker compose up`               | `make up`                       |
-| Применить миграции          | `bin/rails db:migrate`            | `make migrate`                  |
-| Создать миграцию            | `bin/rails g migration AddField`  | `make migration m="add field"`  |
-| Откатить миграцию           | `bin/rails db:rollback`           | `make rollback`                 |
-| Запустить тесты             | `bin/rails test`                  | `make test`                     |
-| Проверить стиль             | `bin/rubocop`                     | `make lint`                     |
-| Исправить стиль             | `bin/rubocop -a`                  | `make format`                   |
-| Посмотреть маршруты         | `bin/rails routes`                | Swagger: `/docs`                |
+| Задача                 | Rails                            | Здесь                          |
+|------------------------|----------------------------------|--------------------------------|
+| Список команд          | `bin/rails --help`               | `make`                         |
+| Установить зависимости | `bundle install`                 | `make setup`                   |
+| Добавить библиотеку    | `bundle add <gem>`               | `uv add <package>`             |
+| Запустить сервер       | `bin/rails server`               | `make dev`                     |
+| Запустить всё в Docker | `docker compose up`              | `make up`                      |
+| Применить миграции     | `bin/rails db:migrate`           | `make migrate`                 |
+| Создать миграцию       | `bin/rails g migration AddField` | `make migration m="add field"` |
+| Заполнить демо-данными | `bin/rails db:seed:replant`      | `make seed`                    |
+| Откатить миграцию      | `bin/rails db:rollback`          | `make rollback`                |
+| Запустить тесты        | `bin/rails test`                 | `make test`                    |
+| Проверить стиль        | `bin/rubocop`                    | `make lint`                    |
+| Исправить стиль        | `bin/rubocop -a`                 | `make format`                  |
+| Посмотреть маршруты    | `bin/rails routes`               | Swagger: `/docs`               |
 
 Где что лежит:
 
