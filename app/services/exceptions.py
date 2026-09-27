@@ -21,3 +21,11 @@ class ProductNotFoundError(NotFoundError):
 
 class ProductNotAvailableError(ConflictError):
     message = "Product is not available for ordering"
+
+
+class OrderNotFoundError(NotFoundError):
+    message = "Order not found"
+
+
+class OrderAlreadyPaidError(ConflictError):
+    message = "Order has already been paid"
