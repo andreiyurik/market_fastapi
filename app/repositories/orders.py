@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Order
@@ -11,3 +13,6 @@ class OrderRepository:
         self.session.add(order)
         await self.session.flush()
         return order
+
+    async def get(self, order_id: uuid.UUID) -> Order | None:
+        return await self.session.get(Order, order_id)
