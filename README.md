@@ -146,7 +146,7 @@ uv run fastapi dev app/main.py           # сервер с автопереза�
 PostgreSQL) и не трогают данные разработки:
 
 ```bash
-uv run pytest
+uv run pytest --cov                      # тесты + отчёт о покрытии (порог 95%)
 uv run ruff check . && uv run ruff format --check .
 ```
 
@@ -157,8 +157,8 @@ uv run alembic revision --autogenerate -m "describe change"
 ```
 
 CI (GitHub Actions) на каждый push и pull request запускает линтер, проверяет, что миграции
-применяются и соответствуют моделям (`alembic check`), прогоняет тесты на PostgreSQL и
-собирает Docker-образ.
+применяются и соответствуют моделям (`alembic check`), прогоняет тесты на PostgreSQL с
+проверкой покрытия и собирает Docker-образ.
 
 ## Что дальше
 
