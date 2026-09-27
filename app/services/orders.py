@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Order
+from app.models import Order, ProductStatus
 from app.repositories.orders import OrderRepository
 from app.repositories.products import ProductRepository
 from app.schemas import OrderCreate
@@ -15,7 +15,11 @@ class OrderService:
 
     async def create(self, data: OrderCreate) -> Order:
         """Reserve the product and create an order in a single transaction."""
-        product = await self.products.reserve(data.product_id)
+        product = await self.products.change_status(
+            data.product_id,
+            from_status=ProductStatus.AVAILABLE,
+            to_status=ProductStatus.RESERVED,
+        )
         if product is None:
             if await self.products.get(data.product_id) is None:
                 raise ProductNotFoundError

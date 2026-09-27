@@ -98,7 +98,7 @@ tests/                   # интеграционные тесты на реал
 ## Как решена конкурентность
 
 Резервирование — один атомарный условный `UPDATE`
-(`ProductRepository.reserve`):
+(`ProductRepository.change_status`):
 
 ```sql
 UPDATE products SET status = 'RESERVED'
