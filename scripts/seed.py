@@ -11,15 +11,25 @@ from sqlalchemy import delete
 from app.core.db import SessionLocal, engine
 from app.models import Order, Product
 
+# Assortment modelled on a typical resale store: electronics, fur, jewelry, appliances,
+# watches, kids' goods and accessories.
 PRODUCTS = [
-    ("Leica M6, 1986", "185000.00"),
-    ("iPhone 15 Pro, 256 GB", "79990.00"),
-    ("Nike Air Jordan 1 Chicago, 43", "42000.00"),
-    ("Sony PlayStation 5", "38500.00"),
-    ("Herman Miller Aeron", "65000.00"),
-    ("Fujifilm X100V", "129000.00"),
-    ("Nintendo Switch OLED", "24990.00"),
-    ("MacBook Air M2, 16 GB", "89000.00"),
+    ("iPhone 16 Pro Max 256GB", "77770.00"),
+    ("Ноутбук Acer Nitro 5", "30030.00"),
+    ("MacBook Pro 15 (2019)", "28878.00"),
+    ("Ноутбук ASUS VivoBook 15", "18198.00"),
+    ("Наушники HOCO W55 Plus", "2490.00"),
+    ("Шуба норковая KALYAEV", "21690.00"),
+    ("Пальто Alberta Ferretti", "19999.00"),
+    ("Кольцо золотое 585 с бриллиантом", "24500.00"),
+    ("Серьги золотые 585 с топазом", "15990.00"),
+    ("Фен профессиональный M7", "3499.00"),
+    ("Аэрогриль Xiaomi Smart Air Fryer", "5990.00"),
+    ("Apple Watch Series 9 45mm", "21990.00"),
+    ("Casio G-Shock GA-2100", "7990.00"),
+    ("Коляска Cybex Priam", "34900.00"),
+    ("Конструктор LEGO Technic 42115", "18990.00"),
+    ("Сумка Furla Metropolis", "12990.00"),
 ]
 
 
