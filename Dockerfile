@@ -17,6 +17,10 @@ COPY alembic ./alembic
 COPY app ./app
 RUN uv sync --frozen --no-dev
 
+# Run the app as an unprivileged user.
+RUN useradd --system --no-create-home app
+USER app
+
 EXPOSE 8000
 
 CMD ["sh", "-c", "alembic upgrade head && exec fastapi run app/main.py --port 8000"]
