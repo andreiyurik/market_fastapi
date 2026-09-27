@@ -42,7 +42,7 @@ jobs:
           uv run alembic upgrade head
           uv run alembic check
       - name: Run tests
-        run: uv run pytest -v
+        run: uv run pytest -v --cov
 
   docker:
     runs-on: ubuntu-latest
