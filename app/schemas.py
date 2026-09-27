@@ -22,5 +22,17 @@ class ProductRead(BaseModel):
     created_at: datetime
 
 
+class OrderCreate(BaseModel):
+    product_id: uuid.UUID
+
+
+class OrderRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    product_id: uuid.UUID
+    created_at: datetime
+
+
 class ErrorResponse(BaseModel):
     detail: str

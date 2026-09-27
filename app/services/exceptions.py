@@ -17,3 +17,7 @@ class ConflictError(DomainError):
 
 class ProductNotFoundError(NotFoundError):
     message = "Product not found"
+
+
+class ProductNotAvailableError(ConflictError):
+    message = "Product is not available for ordering"
