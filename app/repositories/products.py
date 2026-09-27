@@ -18,18 +18,20 @@ class ProductRepository:
     async def get(self, product_id: uuid.UUID) -> Product | None:
         return await self.session.get(Product, product_id)
 
-    async def reserve(self, product_id: uuid.UUID) -> Product | None:
-        """Atomically switch the product from AVAILABLE to RESERVED.
+    async def change_status(
+        self, product_id: uuid.UUID, *, from_status: ProductStatus, to_status: ProductStatus
+    ) -> Product | None:
+        """Atomically move the product from `from_status` to `to_status`.
 
         The WHERE clause is the concurrency guard: PostgreSQL locks the row for the
         UPDATE, so of several concurrent transactions only the first one matches
-        `status = AVAILABLE`. The others wait for the lock, re-check the condition,
-        see RESERVED and update nothing. Returns None if the product was not reserved.
+        `status = from_status`. The others wait for the lock, re-check the condition,
+        see the new status and update nothing. Returns None if nothing was updated.
         """
         stmt = (
             update(Product)
-            .where(Product.id == product_id, Product.status == ProductStatus.AVAILABLE)
-            .values(status=ProductStatus.RESERVED)
+            .where(Product.id == product_id, Product.status == from_status)
+            .values(status=to_status)
             .returning(Product)
         )
         return await self.session.scalar(stmt)
