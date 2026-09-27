@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup up down db dev migrate migration rollback test lint format openapi
+.PHONY: help setup up down db dev migrate migration rollback seed test lint format openapi
 
 help: ## Show available commands
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  make %-10s %s\n", $$1, $$2}'
@@ -29,6 +29,9 @@ migration: ## Create a migration from model changes: make migration m="add field
 
 rollback: ## Roll back the last migration
 	uv run alembic downgrade -1
+
+seed: ## Reset demo data: delete everything and insert sample products
+	uv run python -m scripts.seed
 
 test: ## Run tests with coverage
 	uv run pytest --cov
