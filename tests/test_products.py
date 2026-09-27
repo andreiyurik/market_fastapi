@@ -32,3 +32,28 @@ async def test_get_missing_product_returns_404(client: AsyncClient) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Product not found"}
+
+
+async def test_list_products_newest_first(client: AsyncClient) -> None:
+    first = (await client.post("/products", json={"title": "First", "price": "1.00"})).json()
+    second = (await client.post("/products", json={"title": "Second", "price": "2.00"})).json()
+
+    response = await client.get("/products", params={"limit": 2})
+
+    assert response.status_code == 200
+    assert response.json() == [second, first]
+
+
+async def test_list_products_paginates(client: AsyncClient) -> None:
+    first = (await client.post("/products", json={"title": "First", "price": "1.00"})).json()
+    await client.post("/products", json={"title": "Second", "price": "2.00"})
+
+    response = await client.get("/products", params={"limit": 1, "offset": 1})
+
+    assert response.json() == [first]
+
+
+async def test_list_products_rejects_too_large_limit(client: AsyncClient) -> None:
+    response = await client.get("/products", params={"limit": 101})
+
+    assert response.status_code == 422

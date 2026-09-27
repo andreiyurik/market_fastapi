@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +18,9 @@ class ProductService:
         product = await self.products.add(Product(title=data.title, price=data.price))
         await self.session.commit()
         return product
+
+    async def list(self, *, limit: int, offset: int) -> Sequence[Product]:
+        return await self.products.list(limit=limit, offset=offset)
 
     async def get(self, product_id: uuid.UUID) -> Product:
         product = await self.products.get(product_id)
