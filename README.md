@@ -25,6 +25,21 @@ them gets it.
 **Stack:** Python 3.12, FastAPI, PostgreSQL 17, SQLAlchemy 2.0 (async, asyncpg), Alembic,
 Pydantic v2, uv, Ruff, pytest, Docker Compose, GitHub Actions.
 
+## Where to look first
+
+The core of the solution is three files:
+
+1. [`app/repositories/products.py`](app/repositories/products.py): `change_status`, the atomic
+   conditional `UPDATE` that makes a reservation race-free.
+2. [`app/services/orders.py`](app/services/orders.py): `OrderService.create`, which reserves the
+   product and creates the order in one transaction, or raises domain errors that become
+   `404` / `409`.
+3. [`tests/test_concurrency.py`](tests/test_concurrency.py): 20 concurrent orders for one product,
+   exactly one succeeds.
+
+Everything else is the HTTP layer ([`app/api/`](app/api)), the data model
+([`app/models.py`](app/models.py)) and tooling to run and check it.
+
 ## Quick start
 
 ```bash
