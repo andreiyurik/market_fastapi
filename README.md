@@ -28,7 +28,9 @@ Run `make` to list all commands, see also [Coming from Rails](#coming-from-rails
 
 React + shadcn/ui client: [market_react](https://github.com/andreiyurik/market_react).
 It shows the catalog, ordering, payment and a "20 buyers at once" button that demonstrates
-the race condition protection. Run `make up` and `make seed` here, then `npm run dev` there.
+the race condition protection. The whole stack (database, API, frontend and demo data) starts
+with one command from that repository: `docker compose up --build`, then open
+http://localhost:5173.
 
 ## API
 
