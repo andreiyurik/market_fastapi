@@ -1,10 +1,26 @@
 # Resale Market API
 
+[![CI](https://github.com/andreiyurik/market_fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/andreiyurik/market_fastapi/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Reservation and purchase API for a resale marketplace. Every product exists in a single copy
 and moves through `AVAILABLE → RESERVED → SOLD`.
 
 **Key guarantee:** when several users order the same product at the same time, exactly one of
 them gets it.
+
+<p align="center">
+  <img src="docs/images/race.gif" width="860"
+       alt="20 buyers order the same product at once: one reserves it, 19 get 409 Conflict, then the order is paid">
+</p>
+
+| Storefront ([React demo](https://github.com/andreiyurik/market_react)) | API docs (Swagger) |
+|---|---|
+| <img src="docs/images/storefront.webp" alt="Resale Market storefront built on this API"> | <img src="docs/images/swagger.webp" alt="Swagger UI with products, orders and health endpoints"> |
 
 **Stack:** Python 3.12, FastAPI, PostgreSQL 17, SQLAlchemy 2.0 (async, asyncpg), Alembic,
 Pydantic v2, uv, Ruff, pytest, Docker Compose, GitHub Actions.
@@ -88,10 +104,14 @@ Prices are sent as strings (`"2500.00"`): they are `Decimal`, so no float roundi
 
 The app has three layers, and dependencies only point down:
 
-```
-api/routes    HTTP: request validation, status codes, OpenAPI  →  services
-services      business rules and transactions, no HTTP         →  repositories
-repositories  SQL queries via SQLAlchemy                       →  PostgreSQL
+```mermaid
+flowchart LR
+    client["Client<br/>React · Swagger · curl"] -->|HTTP / JSON| routes
+    subgraph app["FastAPI app"]
+        routes["api/routes<br/>validation, status codes, OpenAPI"] --> services["services<br/>business rules, transactions"]
+        services --> repos["repositories<br/>SQL via SQLAlchemy"]
+    end
+    repos --> db[("PostgreSQL")]
 ```
 
 - **Routes** take a Pydantic schema, call a service and return a response schema.
@@ -133,6 +153,27 @@ A reservation is a single atomic conditional `UPDATE` (`ProductRepository.change
 UPDATE products SET status = 'RESERVED'
 WHERE id = :id AND status = 'AVAILABLE'
 RETURNING *;
+```
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Buyer A
+    participant B as Buyer B
+    participant API
+    participant DB as PostgreSQL
+    A->>API: POST /orders
+    B->>API: POST /orders
+    API->>DB: UPDATE … WHERE status = 'AVAILABLE' (A)
+    Note over DB: row locked by A
+    API->>DB: UPDATE … WHERE status = 'AVAILABLE' (B)
+    Note over DB: B waits for the lock
+    DB-->>API: 1 row updated (A)
+    API->>DB: INSERT order, COMMIT (A)
+    API-->>A: 201 Created
+    Note over DB: lock released, B re-checks WHERE and sees RESERVED
+    DB-->>API: 0 rows updated (B)
+    API-->>B: 409 Conflict
 ```
 
 When several transactions update the same row, PostgreSQL locks it for the first one. The
@@ -184,6 +225,9 @@ image build.
 
 ## Coming from Rails
 
+<details>
+<summary>Rails commands and project layout mapped to this project</summary>
+
 Short commands live in the [`Makefile`](Makefile). They wrap plain `uv run …` calls, which can
 also be run directly.
 
@@ -222,6 +266,8 @@ Where things live:
 The main difference from Rails: SQLAlchemy is not ActiveRecord. A model only describes a
 table, and queries live in repositories, so layers that Rails often mixes inside the model are
 kept separate here.
+
+</details>
 
 ## Roadmap
 
