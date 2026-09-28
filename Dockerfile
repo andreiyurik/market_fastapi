@@ -15,6 +15,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
+# Maintenance scripts, e.g. `python -m scripts.seed` for demo data.
+COPY scripts ./scripts
 RUN uv sync --frozen --no-dev
 
 # Run the app as an unprivileged user.
